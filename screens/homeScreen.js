@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, ScrollView, Text, TouchableOpacity, View, TextInput, ActivityIndicator, FlatList } from 'react-native';
+import { StyleSheet, ScrollView, Text, TouchableOpacity, View, TextInput, ActivityIndicator, FlatList, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {useState, useEffect, useRef, useCallback} from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MapView, { Marker, Polyline } from 'react-native-maps';
+import * as Location from 'expo-location';
 
 const suggestions = [
   {id: '1', icon: 'home-outline', label: 'home', sub: 'addhome'},
@@ -39,8 +41,32 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [recentPlaces, setRecentPlaces] = useState([]);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [destination, setDestination] = useState(null);
   const debounceRef = useRef(null);
   const inputRef = useRef(null);
+  const getCurrentLocation = async()=>{
+    try {
+      const {status} = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('location permission denied');
+        return;
+      }
+      const location = await Location.getCurrentPositionAsync({});
+      setCurrentLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05
+      });
+
+    }
+    catch(err) {
+      console.log(err);
+
+    }
+  };
+
   useEffect(()=>{
     loadRecent();
   },[]);
@@ -119,17 +145,18 @@ export default function App() {
   };
   const selectPlace = (feature)=>{
     const {name, address, lat, lon} = parseFeature(feature);
+    setDestination({latitude: lat, longitude: lon, title: name})
     setSearchText(name);
     setShowResult(false);
     setResults([]);
-    keyboard.dismiss();
+    Keyboard.dismiss();
     saveToRecent(name, address);
 
   };
 const selectRecent = (item)=>{
   setSearchText(item.name);
   saveToRecent(item.name, item.address);
-  keyboard.dismiss();
+  Keyboard.dismiss();
 
 };
 const clearSearch = ()=>{
@@ -167,6 +194,7 @@ const getResultIcon = (properties = {})=>{
           <Ionicons name= "person" size={20} color='black'/>
         </TouchableOpacity>
         </View>
+        <View style={{position: 'relative', zIndex: 100}}>
       <View style={{flexDirection: 'row', gap: 10, padding: 10, borderWidth: 2, borderRadius: 10}}>
         <Ionicons name="search-outline" size={25} color='black' />
         <TextInput placeholder="Where to?" placeholderTextColor= 'gray'
@@ -217,6 +245,7 @@ const getResultIcon = (properties = {})=>{
           )}
         </View>
       )}
+      </View>
       <View style={{flexDirection: 'row', marginTop: 10, justifyContent: 'space-between', padding: 10 }}>
         {rideOptions.map((opt)=>(
           <TouchableOpacity  style={{alignItems: 'center'}} key={opt.id}>
@@ -228,6 +257,20 @@ const getResultIcon = (properties = {})=>{
             </Text>
           </TouchableOpacity>
         ))}
+      </View>
+      <View style={styles.mapContainer}>
+          {currentLocation && (
+            <MapView style={styles.map} initialRegion={currentLocation} showsUserLocation showsMyLocationButton>
+              <Marker coordinate={currentLocation}
+              title="you"/>
+              {destination && (
+                <Marker coordinate={destination} title={destination.title} pinColor="green"/>
+              )}
+              {destination && (
+                <Polyline coordinate={[currentLocation, destination]} strokeWidth={4} strokeColor="#111"/>
+              )}
+            </MapView>
+          )}
       </View>
       <ScrollView>
           <Text>Saved Places</Text>
@@ -267,15 +310,15 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: 'absolute',
-    top: '100%',
+    top: 58,
     left: 0,
     right: 0,
     backgroundColor: '#fff',
     borderRadius: 14,
     shadowColor: '#000',
-    shawdowOffset: {width: 0, height: 6},
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.1,
-    shawdowRadius: 16,
+    shadowRadius: 16,
     elevation: 10,
     zIndex: 200
   },
