@@ -272,20 +272,71 @@ const getResultIcon = (properties = {})=>{
             </MapView>
           )}
       </View>
-      <ScrollView>
-          <Text>Saved Places</Text>
+      <ScrollView style={styles.body}
+      showsVerticalScrollIndicator= {false}
+      keyboardShouldPersistTaps= "handled">
+          <Text style={styles.sectionTitle}>Saved Places</Text>
           {suggestions.map((item)=>(
-            <TouchableOpacity style={{}} key={item.id}>
-              <View>
+            <TouchableOpacity style={styles.listRow} key={item.id}>
+              <View style={styles.listIconBox}>
                 <Ionicons name={item.icon} size={20} color='black' />
               </View>
-              <View>
-                <Text>{item.label}</Text>
-                <Text>{item.sub}</Text>
+              <View style={styles.listText}>
+                <Text style={styles.listLabel}>{item.label}</Text>
+                <Text stlye={styles.listSubLabel}>{item.sub}</Text>
               </View>
+              <Ionicons name="chevron-forward" size={16} color= '#ccc'/>
             </TouchableOpacity>
           ))}
+          <Text style={styles.sectionTitle}>Recent</Text>
+          {recentPlaces.length === 0?(
+            <Text>No Recent Places Yet</Text>
+          ):(
+          recentPlaces.map((item, idx)=>(
+            <TouchableOpacity 
+            key={idx} style={styles.listRow} activeOpacity={0.7} onPress={()=>selectRecent(item)}>
+              <View style={styles.listIconBox}>
+                <Ionicons name="time-outline" size={20} color='#111'/>
+              </View>
+              <View style={styles.listText}>
+                <Text style={styles.listLabel}>
+                  {item.name}
+                </Text>
+                <Text style={styles.listSubLabel}>
+                  {item.address}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={60} color='#ccc'/>
+            </TouchableOpacity>
+          ))
+        )}
+        <View style={styles.promoBanner}>
+          <View style={{flex: 1}}>
+            <Text style={styles.promoTitle}>
+              Ride More, Save More
+            </Text>
+            <Text style={styles.promoSub}>
+              Get 20% off your next three rides!
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.promoButton} activeOpacity={0.85}>
+            <Text style={styles.promoButtonText}>Claim</Text>
+          </TouchableOpacity>
+        </View>
+        <View></View>
+
       </ScrollView>
+      <View>{[
+        {icon: 'home', label: 'Home', active: true}, 
+        {icon: 'car-outline', label: 'Activity', active: false},
+        {icon: 'gift-outline', label: 'Rewards', active: false},
+        {icon: 'person-outline', label: 'Account', active: false},
+      ].map((tab)=>(
+        <TouchableOpacity key={tab.label} activeOpacity={0.7} style={styles.navTab}>
+          <Ionicons name={tab.icon} size={24} color={tab.active?'#111':'#aaa'}/>
+          <Text style={[styles.navLabel, tab.active & styles.navLabelActive]}>{tab.label}</Text>
+        </TouchableOpacity>
+      ))}</View>
       
     </View>
   );
@@ -360,5 +411,75 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     marginTop: 2
+  },
+  mapContainer: {
+    height: 230,
+    marginHorizontal: 20,
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 10
+  },
+  map: {
+    flex: 1, 
+  },
+  body: {
+    flex: 1,
+    paddingHorizontal: 20,
+    marginTop: 8
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#aaa',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 10
+  },
+  listRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f3f3'
+  },
+  listIconBox: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#f3f3f3',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 14
+  },
+  listText: {
+    flex: 1
+  },
+  listLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#111'
+  },
+  listSubLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2
+  },
+  promoBanner: {
+    flexDirection: 'row',
+    alignItems: "center",
+    backgroundColor: '#111',
+    borderRadius: 14,
+    padding: 18,
+    marginTop: 24
+  },
+  promoTitle: {
+    fontSize: 15, 
+    fonyWeight: '700',
+    color: '#fff'
+  },
+  promoSub: {
+    fontSize: 12,
+    color: '#aaa',
+    marginTop: 3
   }
 });
