@@ -211,10 +211,17 @@ const sheetTranslateY = sheetAnim.interpolate({
         <View style={styles.yourself}/></Marker>
         {destination && (
           <Marker coordinate={destination} title={destination.title}>
-          <View>
+          <View style={styles.destinationPin}>
           <Ionicons name="location" size={32} color="#111"/>
           </View>
           </Marker>
+        )}
+        {routeCoords.length === 2 && (
+          <Polyline 
+          coordinates = {routeCoords}
+          strokeWidth= {5}
+          strokeColor= 'red'/>
+
         )}
         </MapView>
       )}
