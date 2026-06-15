@@ -16,6 +16,7 @@ const rideOptions = [
   {id: '3', icon: 'cube-outline', label: 'package', sub: 'send items'},
   {id: '4', icon: 'restaurant-outline', label: 'eats', sub: 'food delivery'}
 ] 
+
 const getGreeting = ()=>{
   const hour = new Date().getHours();
   if (hour < 12) {
@@ -35,7 +36,7 @@ const getGreeting = ()=>{
 const recentKey = 'uber_clone_recent';
 const maxRecent = 5;
 
-export default function App() {
+export default function App({navigation}) {
   const [searchText, setSearchText] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,6 +70,7 @@ export default function App() {
 
   useEffect(()=>{
     loadRecent();
+    getCurrentLocation();
   },[]);
   const loadRecent = async()=>{
     try{
@@ -183,14 +185,46 @@ const getResultIcon = (properties = {})=>{
   return 'location-outline';
 
 }
+const getRideDetails = (ride)=>{
+  if(!distanceKm) return{price : '-', eta: '-'};
+  const price = ride + basePrice + distanceKm * ride.perKm;
+  const eta = ride.time + Math.round(distanceKm*2.5);
+  return {price: formatPrice(price), eta: formatTime(eta)};
+};
+const selectedRideObj = rideOptions.find(r=>r.id === selectedRide);
+const {price : totalPrice, eta: totalEta} = selectedRideObj ? getRideDetails(selectedRideObj): {price : '-', eta: '-'};
+const sheetTranslateY = sheetAnim.interpolate({
+  inputRange: [0, 1],
+  outputRange: [400, 0]
+});
+
   return (
     <View style={styles.container}>
+    <View style={styles.mapFull}>
+      {currentLocation && (
+        <MapView 
+        ref= {mapRef}
+        initialRegion= {currentLocation}
+        showUserLocation
+        showsMyLocationButton= {false}>
+        <Marker coordinate= {currentLocation} title="You">
+        <View style={styles.yourself}/></Marker>
+        {destination && (
+          <Marker coordinate={destination} title={destination.title}>
+          <View>
+          <Ionicons name="location" size={32} color="#111"/>
+          </View>
+          </Marker>
+        )}
+        </MapView>
+      )}
+    </View>
       <View style={{flexDirection: 'row', justifyContent: 'space-between', padding: 15}}>
         <View>
           <Text style={{fontSize: 20}}>{getGreeting()}</Text>
           <Text style={styles.heading}>Where to?</Text>
         </View>
-        <TouchableOpacity style={{backgroundColor: 'gray', borderRadius: 30, width: 50, alignItems: 'center', justifyContent: 'center', height: 50}}>
+        <TouchableOpacity style={{backgroundColor: 'gray', borderRadius: 30, width: 50, alignItems: 'center', justifyContent: 'center', height: 50}} onPress={()=>navigation.navigate('profileScreen')}>
           <Ionicons name= "person" size={20} color='black'/>
         </TouchableOpacity>
         </View>
@@ -258,6 +292,10 @@ const getResultIcon = (properties = {})=>{
           </TouchableOpacity>
         ))}
       </View>
+      <View>
+        <View/>
+        <View/>
+      </View>
       <View style={styles.mapContainer}>
           {currentLocation && (
             <MapView style={styles.map} initialRegion={currentLocation} showsUserLocation showsMyLocationButton>
@@ -267,7 +305,7 @@ const getResultIcon = (properties = {})=>{
                 <Marker coordinate={destination} title={destination.title} pinColor="green"/>
               )}
               {destination && (
-                <Polyline coordinate={[currentLocation, destination]} strokeWidth={4} strokeColor="#111"/>
+                <Polyline coordinates={[currentLocation, destination]} strokeWidth={4} strokeColor="#111"/>
               )}
             </MapView>
           )}
@@ -326,7 +364,7 @@ const getResultIcon = (properties = {})=>{
         <View></View>
 
       </ScrollView>
-      <View>{[
+      <View style={styles.bottomNav}>{[
         {icon: 'home', label: 'Home', active: true}, 
         {icon: 'car-outline', label: 'Activity', active: false},
         {icon: 'gift-outline', label: 'Rewards', active: false},
@@ -424,8 +462,9 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    paddingHorizontal: 20,
-    marginTop: 8
+    paddingHorizontal: 25,
+    marginTop: 8,
+    height: 80
   },
   sectionTitle: {
     fontSize: 12,
@@ -481,5 +520,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#aaa',
     marginTop: 3
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    paddingBottom: 10,
+    paddingTop: 8,
+    backgroundColor: '#fff'
+  },
+  navTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  navLabel: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 3
   }
+
 });
